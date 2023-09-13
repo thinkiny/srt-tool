@@ -32,11 +32,11 @@ class SrtBuilder:
       if res.isEmpty then res += item
       else
         res.last.mergeLater(item) match
-          case MergeResult.DropPrev(item) =>
+          case MergeAction.DropPrev(item) =>
             res.dropRightInPlace(1); merge(item)
-          case MergeResult.Modify(item) => merge(item)
-          case MergeResult.Stop         => res += item
-          case MergeResult.Skip         =>
+          case MergeAction.Modify(item) => merge(item)
+          case MergeAction.AddCurrent   => res += item
+          case MergeAction.DropCurrent  =>
 
     buffer.filter(_.sub.nonEmpty).foreach(merge)
     res.toList

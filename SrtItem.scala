@@ -2,11 +2,11 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-enum MergeResult:
-  case DropPrev(item: SrtItem) extends MergeResult
-  case Modify(item: SrtItem) extends MergeResult
-  case Stop extends MergeResult
-  case Skip extends MergeResult
+enum MergeAction:
+  case DropPrev(item: SrtItem) extends MergeAction
+  case Modify(item: SrtItem) extends MergeAction
+  case DropCurrent extends MergeAction
+  case AddCurrent extends MergeAction
 
 case class SrtItem(
     startTime: LocalTime,
@@ -19,20 +19,20 @@ case class SrtItem(
       ord.max(endTime, item.endTime)
     )
 
-  def mergeLater(o: SrtItem): MergeResult =
+  def mergeLater(o: SrtItem): MergeAction =
     ((sub.size min o.sub.size) to 1 by -1).find(i =>
       sub.takeRight(i) == o.sub.take(i)
     ) match
       case Some(i) => {
         if (i == sub.size) then
-          MergeResult.DropPrev(SrtItem(startTime, o.endTime, o.sub))
-        else if o.sub.size == i then MergeResult.Skip
+          MergeAction.DropPrev(SrtItem(startTime, o.endTime, o.sub))
+        else if o.sub.size == i then MergeAction.DropCurrent
         else
-          MergeResult.Modify(
+          MergeAction.Modify(
             SrtItem(o.startTime, o.endTime, o.sub.drop(i))
           )
       }
-      case _ => MergeResult.Stop
+      case _ => MergeAction.AddCurrent
 
   def toSrtString(i: Int): String =
     val sTime = SrtItem.formatTime(startTime)
